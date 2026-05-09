@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mathematics Online Exam</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0d1b3e;--blue:#1a3a6e;--gold:#c8a84b;--gold2:#e8c96a;
+  --white:#fafaf8;--gray:#f0eff5;--text:#1a1a2e;--muted:#6b7280;
+  --correct:#10b981;--wrong:#ef4444;--border:#d1d9ef;--purple:#7c3aed;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);min-height:100vh;color:var(--text);}
+.screen{display:none;min-height:100vh;}
+.screen.active{display:flex;}
+
+/* ══ WELCOME ══ */
+#s-welcome{align-items:center;justify-content:center;padding:30px 16px;
+  background:radial-gradient(ellipse at 25% 15%,rgba(200,168,75,.13),transparent 55%),
+             radial-gradient(ellipse at 75% 85%,rgba(26,58,110,.4),transparent 55%),var(--navy);}
+.wcard{background:var(--white);max-width:520px;width:100%;
+  box-shadow:0 40px 100px rgba(0,0,0,.6),0 0 0 1px rgba(200,168,75,.2);
+  animation:rise .65s cubic-bezier(.16,1,.3,1) both;}
+@keyframes rise{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:none}}
+.whead{background:var(--blue);padding:32px 36px 26px;position:relative;overflow:hidden;}
+.whead::before{content:'';position:absolute;top:0;right:0;width:200px;height:200px;
+  background:radial-gradient(circle,rgba(200,168,75,.08),transparent 70%);pointer-events:none;}
+.whead::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,var(--gold),var(--gold2),var(--gold),transparent);}
+.wtitle{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:#fff;line-height:1.2;}
+.wgold{width:50px;height:2px;background:var(--gold);margin:12px 0 8px;}
+.wsub{color:rgba(255,255,255,.58);font-size:12.5px;letter-spacing:.04em;}
+.wbody{padding:32px 36px;}
+.fl{display:block;font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:7px;}
+.fi{width:100%;border:none;border-bottom:2px solid var(--border);background:transparent;
+  padding:9px 4px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);
+  outline:none;transition:border-color .2s;}
+.fi:focus{border-bottom-color:var(--gold);}
+.fi::placeholder{color:#c0c0cc;font-size:13.5px;}
+.fg{margin-bottom:22px;}
+.info-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;
+  background:var(--border);border:1px solid var(--border);margin:22px 0 28px;}
+.ic{background:var(--gray);padding:13px 10px;text-align:center;}
+.ic-l{font-size:9px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+.ic-v{font-size:13px;font-weight:600;color:var(--navy);margin-top:3px;}
+.btn-go{width:100%;background:var(--blue);color:#fff;border:none;padding:16px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.09em;
+  text-transform:uppercase;position:relative;overflow:hidden;transition:background .2s;}
+.btn-go:hover{background:var(--navy);}
+.btn-go::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold));}
+.credit{text-align:center;font-size:11px;color:var(--muted);padding:14px 0 0;}
+.credit strong{color:var(--blue);}
+
+/* legend dots */
+.legend{display:flex;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+.leg{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);}
+.leg-dot{width:12px;height:12px;border-radius:0;}
+
+/* ══ EXAM ══ */
+#s-exam{flex-direction:column;background:linear-gradient(150deg,#f4f2ee 0%,#edf0f9 100%);}
+.topbar{background:var(--blue);height:56px;display:flex;align-items:center;
+  padding:0 24px;gap:16px;position:sticky;top:0;z-index:50;
+  box-shadow:0 2px 20px rgba(0,0,0,.35);}
+.tb-title{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;
+  color:var(--gold);letter-spacing:.5px;}
+.tb-mid{flex:1;text-align:center;color:rgba(255,255,255,.65);font-size:12px;}
+.tb-mid strong{color:#fff;}
+.tb-timer{background:rgba(0,0,0,.3);border:1px solid var(--gold);
+  padding:5px 15px;color:var(--gold);font-size:14px;font-weight:600;
+  letter-spacing:.06em;font-variant-numeric:tabular-nums;}
+.tb-timer.warn{color:#f87171;border-color:#f87171;animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+.exam-wrap{flex:1;padding:22px 18px;max-width:800px;margin:0 auto;width:100%;}
+
+/* dots */
+.q-dots{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:16px;}
+.qdot{width:23px;height:23px;border:1.5px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:var(--muted);cursor:pointer;
+  transition:all .14s;flex-shrink:0;}
+.qdot.done-mcq{background:var(--blue);border-color:var(--blue);color:#fff;}
+.qdot.done-typed{background:var(--purple);border-color:var(--purple);color:#fff;}
+.qdot.active{background:var(--gold);border-color:var(--gold);color:var(--navy);}
+
+/* progress */
+.progress-row{display:flex;align-items:center;gap:14px;margin-bottom:18px;}
+.prog-bar{flex:1;height:4px;background:#dde3ef;border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--gold));
+  border-radius:2px;transition:width .4s ease;}
+.prog-txt{font-size:11px;color:var(--muted);flex-shrink:0;}
+
+/* section badge */
+.sec-badge-row{margin-bottom:12px;}
+.sec-badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;padding:4px 12px;
+  border-left:3px solid var(--gold);background:rgba(200,168,75,.1);color:var(--blue);}
+
+/* question card */
+.qcard{background:#fff;
+  box-shadow:0 4px 28px rgba(0,0,0,.07),0 0 0 1px rgba(200,168,75,.1);
+  overflow:hidden;animation:qin .28s ease both;}
+@keyframes qin{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+.qcard-head{background:var(--blue);padding:13px 22px;display:flex;align-items:center;gap:11px;}
+.q-badge{background:var(--gold);color:var(--navy);font-weight:700;font-size:10px;
+  padding:3px 10px;letter-spacing:.07em;flex-shrink:0;}
+.q-type-pill{font-size:9.5px;font-weight:700;padding:3px 9px;letter-spacing:.06em;flex-shrink:0;}
+.pill-mcq{background:rgba(16,185,129,.22);color:#6ee7b7;}
+.pill-typed{background:rgba(124,58,237,.22);color:#c4b5fd;}
+.q-section-label{color:rgba(255,255,255,.55);font-size:11px;flex:1;text-align:right;}
+.qcard-body{padding:22px 22px 18px;}
+.q-text{font-size:15px;line-height:1.72;color:var(--text);margin-bottom:17px;font-weight:500;}
+.q-text .hl{font-family:'Courier New',monospace;background:#f0f4fb;
+  padding:2px 6px;border-radius:0;font-size:13.5px;color:var(--navy);}
+
+/* MCQ */
+.options{display:flex;flex-direction:column;gap:8px;}
+.opt{display:flex;align-items:center;gap:11px;padding:11px 14px;
+  border:1.5px solid var(--border);background:#fafaf8;cursor:pointer;
+  transition:all .15s;user-select:none;}
+.opt:hover{border-color:var(--blue);background:#f0f4ff;}
+.opt.selected{border-color:var(--blue);background:#eef2ff;}
+.opt.correct{border-color:var(--correct)!important;background:#f0fdf8!important;}
+.opt.wrong{border-color:var(--wrong)!important;background:#fef2f2!important;}
+.opt-key{width:26px;height:26px;border:1.5px solid var(--border);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:var(--muted);transition:all .15s;}
+.opt.selected .opt-key{background:var(--blue);border-color:var(--blue);color:#fff;}
+.opt.correct .opt-key{background:var(--correct);border-color:var(--correct);color:#fff;}
+.opt.wrong .opt-key{background:var(--wrong);border-color:var(--wrong);color:#fff;}
+.opt-text{font-size:13.5px;color:var(--text);flex:1;line-height:1.5;}
+.fb-tag{margin-left:auto;font-size:9.5px;font-weight:700;padding:2px 8px;flex-shrink:0;}
+.fb-tag.c{background:#d1fae5;color:#065f46;}
+.fb-tag.w{background:#fee2e2;color:#991b1b;}
+
+/* typed */
+.typed-wrap{margin-top:2px;}
+.typed-input{width:100%;border:2px solid var(--border);background:#fafaf8;
+  padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--text);
+  outline:none;transition:border-color .2s;}
+.typed-input:focus{border-color:var(--purple);}
+.typed-input.tc{border-color:var(--correct);background:#f0fdf8;}
+.typed-input.tw{border-color:var(--wrong);background:#fef2f2;}
+.btn-check{margin-top:9px;padding:10px 24px;background:var(--purple);color:#fff;border:none;
+  cursor:pointer;font-family:'DM Sans',sans-serif;font-size:11.5px;font-weight:600;
+  letter-spacing:.07em;text-transform:uppercase;transition:background .18s;}
+.btn-check:hover{background:#6d28d9;}
+
+/* explanation */
+.expbox{margin-top:12px;padding:10px 14px;background:#f0f4fb;
+  border-left:3px solid var(--blue);font-size:12.5px;color:#444;line-height:1.65;}
+.expbox strong{color:var(--blue);}
+
+/* nav */
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:10px;}
+.btn-nav{padding:11px 24px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;
+  font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;transition:all .16s;}
+.btn-prev{background:transparent;border:1.5px solid var(--border);color:var(--muted);}
+.btn-prev:hover{border-color:var(--navy);color:var(--navy);}
+.btn-next{background:var(--blue);color:#fff;position:relative;overflow:hidden;}
+.btn-next:hover{background:var(--navy);}
+.btn-next::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));}
+.btn-submit-nav{background:var(--gold);color:var(--navy);font-weight:700;}
+.btn-submit-nav:hover{background:var(--gold2);}
+
+/* ══ RESULTS ══ */
+#s-result{flex-direction:column;align-items:center;padding:36px 16px 50px;
+  background:radial-gradient(ellipse at 50% 0%,rgba(200,168,75,.12),transparent 55%),var(--navy);}
+.rcard{background:var(--white);max-width:660px;width:100%;
+  box-shadow:0 40px 80px rgba(0,0,0,.55);animation:rise .5s cubic-bezier(.16,1,.3,1) both;}
+.rhead{background:var(--blue);padding:28px 36px 22px;position:relative;overflow:hidden;}
+.rhead::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--gold),var(--gold2),var(--gold));}
+.rhead h2{font-family:'Playfair Display',serif;font-size:23px;color:#fff;}
+.rhead p{color:rgba(255,255,255,.58);font-size:12.5px;margin-top:5px;}
+.rbody{padding:30px 36px;}
+.score-big{text-align:center;margin-bottom:26px;}
+.sc-num{font-family:'Playfair Display',serif;font-size:68px;font-weight:900;color:var(--blue);line-height:1;}
+.sc-denom{font-size:26px;color:var(--muted);}
+.sc-grade{display:inline-block;margin-top:10px;padding:5px 20px;
+  font-size:13px;font-weight:700;letter-spacing:.07em;}
+.gA{background:#d1fae5;color:#065f46;} .gB{background:#dbeafe;color:#1e3a8a;}
+.gC{background:#fef3c7;color:#92400e;} .gF{background:#fee2e2;color:#991b1b;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  background:var(--border);border:1px solid var(--border);margin-bottom:26px;}
+.sg{background:var(--gray);padding:14px 8px;text-align:center;}
+.sg-v{font-size:20px;font-weight:700;}
+.sg-l{font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-top:3px;}
+.bd-title{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--blue);margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);}
+.bd-item{display:flex;align-items:flex-start;gap:9px;padding:7px 0;
+  border-bottom:1px solid #eee;font-size:12px;}
+.bd-num{width:20px;height:20px;background:var(--blue);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;flex-shrink:0;margin-top:1px;}
+.bd-body{flex:1;}
+.bd-q{color:var(--text);line-height:1.4;}
+.bd-a{font-size:11px;color:var(--muted);margin-top:2px;}
+.bd-tag{font-size:9px;font-weight:700;padding:2px 7px;flex-shrink:0;margin-top:1px;}
+.bd-tag.c{background:#d1fae5;color:#065f46;}
+.bd-tag.w{background:#fee2e2;color:#991b1b;}
+.btn-redo{width:100%;background:var(--blue);color:#fff;border:none;padding:14px;cursor:pointer;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;position:relative;overflow:hidden;transition:background .2s;margin-top:22px;}
+.btn-redo:hover{background:var(--navy);}
+.btn-redo::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));}
+.rcredit{text-align:center;font-size:11px;color:rgba(255,255,255,.3);margin-top:14px;}
+.rcredit strong{color:rgba(255,255,255,.55);}
+</style>
+</head>
+<body>
+
+<!-- ══ WELCOME ══ -->
+<div class="screen active" id="s-welcome">
+  <div class="wcard">
+    <div class="whead">
+      <div class="wtitle">Mathematics Online Exam</div>
+      <div class="wgold"></div>
+      <div class="wsub">F1: Arithmetic &nbsp;·&nbsp; F2: Algebraic Expressions · Powers · Logarithms</div>
+    </div>
+    <div class="wbody">
+      <div class="fg">
+        <label class="fl">Magacaaga oo dhan (Full Name)</label>
+        <input class="fi" id="inp-name" type="text" placeholder="Halkan ku qor magacaaga…">
+      </div>
+      <div class="info-strip">
+        <div class="ic"><div class="ic-l">Su'aalo</div><div class="ic-v">60 Questions</div></div>
+        <div class="ic"><div class="ic-l">Waqti</div><div class="ic-v">50 Daqiiqo</div></div>
+        <div class="ic"><div class="ic-l">Nooc</div><div class="ic-v">MCQ + Qor</div></div>
+      </div>
+      <button class="btn-go" onclick="startExam()">▶ &nbsp; Bilow Imtixaanka</button>
+      <div class="credit">Prepared by: <strong>Sacad Siciid</strong></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXAM ══ -->
+<div class="screen" id="s-exam">
+  <div class="topbar">
+    <div class="tb-title">Math Exam</div>
+    <div class="tb-mid">Ardayga: <strong id="tb-name"></strong></div>
+    <div class="tb-timer" id="timer">50:00</div>
+  </div>
+  <div class="exam-wrap">
+    <div class="legend">
+      <div class="leg"><div class="leg-dot" style="background:var(--blue)"></div> MCQ la jawaabay</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--purple)"></div> Qoraal la jawaabay</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--gold)"></div> Hadda</div>
+      <div class="leg"><div class="leg-dot" style="background:var(--border)"></div> Lama jawabin</div>
+    </div>
+    <div class="q-dots" id="q-dots"></div>
+    <div class="progress-row">
+      <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:1.6%"></div></div>
+      <div class="prog-txt" id="prog-txt">1 / 60</div>
+    </div>
+    <div class="sec-badge-row"><div class="sec-badge" id="sec-badge">Section</div></div>
+    <div class="qcard" id="qcard"></div>
+    <div class="nav-row">
+      <button class="btn-nav btn-prev" onclick="goQ(-1)">← Hore</button>
+      <button class="btn-nav btn-next" id="btn-next" onclick="nextOrSubmit()">Xiga →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESULTS ══ -->
+<div class="screen" id="s-result">
+  <div class="rcard">
+    <div class="rhead">
+      <h2>Natiijooyinka Imtixaanka</h2>
+      <p id="r-subline"></p>
+    </div>
+    <div class="rbody">
+      <div class="score-big">
+        <div><span class="sc-num" id="r-score">0</span><span class="sc-denom">/60</span></div>
+        <div id="r-grade" class="sc-grade"></div>
+      </div>
+      <div class="stats-grid">
+        <div class="sg"><div class="sg-v" id="r-correct" style="color:#10b981"></div><div class="sg-l">Saxan</div></div>
+        <div class="sg"><div class="sg-v" id="r-wrong" style="color:#ef4444"></div><div class="sg-l">Khaldan</div></div>
+        <div class="sg"><div class="sg-v" id="r-skip" style="color:#f59e0b"></div><div class="sg-l">La-mujaabin</div></div>
+        <div class="sg"><div class="sg-v" id="r-pct" style="color:var(--navy)"></div><div class="sg-l">Boqolkiiba</div></div>
+      </div>
+      <div class="bd-title">Faahfaahin Dhammaan Su'aalaha</div>
+      <div id="bd-list"></div>
+      <button class="btn-redo" onclick="resetExam()">↺ &nbsp; Mar Kale Imtixaan Qaado</button>
+    </div>
+  </div>
+  <div class="rcredit">Prepared by: <strong>Sacad Siciid</strong></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  60 QUESTIONS  –  straight from the F1 & F2 PDFs
+//  sec: section label | type: "mcq" or "typed"
+//  ans (typed): lowercase trimmed exact string
+// ═══════════════════════════════════════════════════════
+const QS = [
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F1 §1  TYPES OF NUMBER  (Q 1–8)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F1 – Types of Number", type:"mcq",
+ q:"Natural numbers (N) waa noocee?",
+ opts:["Tirooyin tiraya laga bilaabo 1, 2, 3…","Tirooyin leh eber iyo tirooyin taban",
+       "Tirooyin xun oo keliya","Tirooyin la qaybin karo 2"],
+ ans:0, exp:"Natural numbers waa counting numbers: 1, 2, 3, 4…9"},
+
+{sec:"F1 – Types of Number", type:"mcq",
+ q:"Whole numbers (W) waxaa ka kooban:",
+ opts:["0, 1, 2, 3 … (eber ayaa ku jira)","1, 2, 3 … (eber kuma jiro)",
+       "−1, 0, 1, 2…","1, 3, 5, 7… (firfircoon)"],
+ ans:0, exp:"Whole numbers waxaa ku jira eber: 0, 1, 2, 3…9"},
+
+{sec:"F1 – Types of Number", type:"mcq",
+ q:"246 tirada meesha koobaad (hundreds) waxay mataashaa:",
+ opts:["200","40","6","246"],
+ ans:0, exp:"246 = 2×100 + 4×10 + 6×1 → meesha boqolaabaad = 200"},
+
+{sec:"F1 – Types of Number", type:"mcq",
+ q:"Integers waa:",
+ opts:["Dhammaan tirooyin togan, taban iyo eber","Tirooyin togan oo keliya",
+       "Tirooyin taban oo keliya","Tirooyin dhibic leh"],
+ ans:0, exp:"Integers = positive + negative whole numbers + zero: …−2,−1,0,1,2…"},
+
+{sec:"F1 – Types of Number", type:"mcq",
+ q:"8 + (−3) = ?",
+ opts:["5","11","−5","−11"],
+ ans:0, exp:"Adding negative = subtract positive: 8 − 3 = 5"},
+
+{sec:"F1 – Types of Number", type:"mcq",
+ q:"9 − (−6) = ?",
+ opts:["15","3","−15","−3"],
+ ans:0, exp:"Subtracting negative = adding positive: 9 + 6 = 15"},
+
+{sec:"F1 – Types of Number", type:"typed",
+ q:"(−14) − (−7) = ?\n(Ku qor lamba, tusaale: -7)",
+ ans:"-7",
+ exp:"(−14) − (−7) = −14 + 7 = −7"},
+
+{sec:"F1 – Types of Number", type:"typed",
+ q:"(−4) + (−8) = ?\n(Ku qor lamba)",
+ ans:"-12",
+ exp:"Labada taban waa la koobaaa: −4 − 8 = −12"},
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F1 §1  BRACKETS & PRECEDENCE  (Q 9–12)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F1 – Brackets & Precedence", type:"mcq",
+ q:"4 + 5 × 6 ÷ 2 − 12 ÷ 4 × 2 − 1 = ?",
+ opts:["12","19","7","44"],
+ ans:0, exp:"×÷ horeba: 5×6÷2=15, 12÷4×2=6 → 4+15−6−1=12"},
+
+{sec:"F1 – Brackets & Precedence", type:"mcq",
+ q:"5 − {8 + 7[4 − 1] − 9 ÷ 3} = ?",
+ opts:["−21","26","−26","21"],
+ ans:0, exp:"7[3]=21, 9÷3=3 → {8+21−3}={26} → 5−26=−21"},
+
+{sec:"F1 – Brackets & Precedence", type:"mcq",
+ q:"(−5)(3) = ?",
+ opts:["−15","15","−8","8"],
+ ans:0, exp:"Positive × Negative = Negative: 5×3=15 → −15"},
+
+{sec:"F1 – Brackets & Precedence", type:"typed",
+ q:"(−2)(−8) = ?\n(Ku qor lamba)",
+ ans:"16",
+ exp:"Negative × Negative = Positive: 2×8=16"},
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F1 §1  BASIC LAWS  (Q 13–15)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F1 – Basic Laws of Arithmetic", type:"mcq",
+ q:"Sharci Commutative: 5 + 8 = ?",
+ opts:["8 + 5","5 × 8","8 − 5","5 − 8"],
+ ans:0, exp:"Commutative: a + b = b + a → 5 + 8 = 8 + 5 = 13"},
+
+{sec:"F1 – Basic Laws of Arithmetic", type:"mcq",
+ q:"Sharci Associative: 3 + (4 + 5) = ?",
+ opts:["(3 + 4) + 5","3 × (4 + 5)","3 + 4 × 5","(3 + 4) × 5"],
+ ans:0, exp:"Associative: a+(b+c) = (a+b)+c = 12"},
+
+{sec:"F1 – Basic Laws of Arithmetic", type:"mcq",
+ q:"Sharci Distributive: 3(4 + 5) = ?",
+ opts:["3×4 + 3×5","3×4 + 5","3 + 4×5","(3+4)+(3+5)"],
+ ans:0, exp:"Distributive: a(b+c)=ab+ac → 3×4+3×5=12+15=27"},
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F1 §2  FACTORS & PRIME NUMBERS  (Q 16–21)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F1 – Factors & Prime Numbers", type:"mcq",
+ q:"Tirada ugu yar ee prime number ah:",
+ opts:["2","1","3","0"],
+ ans:0, exp:"2 waa prime number ugu yar. 1 prime ma aha."},
+
+{sec:"F1 – Factors & Prime Numbers", type:"mcq",
+ q:"Factors-ka 12 waa:",
+ opts:["1, 2, 3, 4, 6, 12","1, 2, 4, 6, 12","1, 3, 4, 6, 12","2, 3, 4, 6"],
+ ans:0, exp:"12 = 1×12 = 2×6 = 3×4 → factors: 1,2,3,4,6,12"},
+
+{sec:"F1 – Factors & Prime Numbers", type:"mcq",
+ q:"Prime factorization of 84 = ?",
+ opts:["2² × 3 × 7","2 × 3 × 7","2³ × 3","4 × 21"],
+ ans:0, exp:"84 = 2×2×3×7 = 2²×3×7"},
+
+{sec:"F1 – Factors & Prime Numbers", type:"mcq",
+ q:"HCF of 144 and 66 = ?",
+ opts:["6","12","3","18"],
+ ans:0, exp:"144=2⁴×3², 66=2×3×11 → HCF=2×3=6"},
+
+{sec:"F1 – Factors & Prime Numbers", type:"mcq",
+ q:"LCM of 144 and 66 = ?",
+ opts:["1584","66","144","792"],
+ ans:0, exp:"LCM = 2⁴×3²×11 = 16×9×11 = 1584"},
+
+{sec:"F1 – Factors & Prime Numbers", type:"typed",
+ q:"144 = 2⁴ × ? (Prime factorization)\nKu qor, tusaale: 3^2",
+ ans:"3^2",
+ exp:"144 = 2⁴ × 3² = 16 × 9 = 144"},
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F1 §3  FRACTIONS  (Q 22–28)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F1 – Fractions", type:"mcq",
+ q:"5/9 × 2/7 = ?",
+ opts:["10/63","7/16","10/16","14/45"],
+ ans:0, exp:"5×2=10, 9×7=63 → 10/63"},
+
+{sec:"F1 – Fractions", type:"mcq",
+ q:"2/3 ÷ 5/7 = ?",
+ opts:["14/15","10/21","6/35","15/14"],
+ ans:0, exp:"Flip divisor: 2/3 × 7/5 = 14/15"},
+
+{sec:"F1 – Fractions", type:"mcq",
+ q:"5/9 + 1/6 = ?",
+ opts:["13/18","6/15","1/2","11/18"],
+ ans:0, exp:"LCM=18: 10/18 + 3/18 = 13/18"},
+
+{sec:"F1 – Fractions", type:"mcq",
+ q:"11/15 − 2/3 = ?",
+ opts:["1/15","3/15","9/15","1/5"],
+ ans:0, exp:"2/3=10/15 → 11/15−10/15=1/15"},
+
+{sec:"F1 – Fractions", type:"mcq",
+ q:"Tiro 25 oo ah xiddigaha, 12 ayaa khaldan. Boqolkiiba meeqaa?",
+ opts:["48%","52%","12%","25%"],
+ ans:0, exp:"12/25 × 100 = 48%"},
+
+{sec:"F1 – Fractions", type:"typed",
+ q:"8% of 25 = ?\n(Ku qor lamba)",
+ ans:"2",
+ exp:"8/100 × 25 = 200/100 = 2"},
+
+{sec:"F1 – Fractions", type:"mcq",
+ q:"Proper fraction waa:",
+ opts:["Numerator < Denominator","Numerator > Denominator",
+       "Numerator = Denominator","Integer + fraction"],
+ ans:0, exp:"Proper fraction: numerator ka yar denominator, e.g. 4/7"},
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F1 §4  DECIMAL NUMBERS  (Q 29–34)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F1 – Decimal Numbers", type:"mcq",
+ q:"9.4534 → 2 significant figures = ?",
+ opts:["9.5","9.4","9.45","9.0"],
+ ans:0, exp:"2 sig.fig: first 2 non-zero digits → 9.5 (rounding up because 4 is followed by 5)"},
+
+{sec:"F1 – Decimal Numbers", type:"mcq",
+ q:"9.4534 → 3 significant figures = ?",
+ opts:["9.45","9.5","9.453","9.4"],
+ ans:0, exp:"3 sig.fig: 9.45 (3rd digit is 5, 4th is 3 → leave unchanged)"},
+
+{sec:"F1 – Decimal Numbers", type:"mcq",
+ q:"123.4467 → 1 decimal place = ?",
+ opts:["123.4","123.5","123.0","123.44"],
+ ans:0, exp:"1dp: look at 2nd decimal (4) < 5 → 123.4"},
+
+{sec:"F1 – Decimal Numbers", type:"mcq",
+ q:"123.4467 → 2 decimal places = ?",
+ opts:["123.45","123.44","123.4","123.5"],
+ ans:0, exp:"2dp: 3rd decimal is 6 ≥ 5 → round up → 123.45"},
+
+{sec:"F1 – Decimal Numbers", type:"mcq",
+ q:"Rational number waa:",
+ opts:["Tiro fraction ahaan laga qori karo","Tiro fraction ahaan laga qori karin",
+       "Tiro eber ah","Tiro taban"],
+ ans:0, exp:"Rational number = any number expressible as a fraction a/b"},
+
+{sec:"F1 – Decimal Numbers", type:"typed",
+ q:"1.224 decimal → fraction = ?\n(Ku qor, tusaale: 1224/1000)",
+ ans:"1224/1000",
+ exp:"Decimal to fraction: 1.224 = 1224/1000"},
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F1 §5  POWERS  (Q 35–40)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F1 – Powers & Standard Form", type:"mcq",
+ q:"16 × 8 = 2⁴ × 2³ = ?",
+ opts:["2⁷","2¹²","2","2⁴³"],
+ ans:0, exp:"Multiplication rule: a^m × a^n = a^(m+n) → 2^(4+3) = 2⁷ = 128"},
+
+{sec:"F1 – Powers & Standard Form", type:"mcq",
+ q:"5⁶ ÷ 5² = ?",
+ opts:["5⁴","5³","5⁸","25"],
+ ans:0, exp:"Division rule: a^m ÷ a^n = a^(m−n) → 5^(6−2) = 5⁴"},
+
+{sec:"F1 – Powers & Standard Form", type:"mcq",
+ q:"6⁻² = ?",
+ opts:["1/36","−36","1/12","36"],
+ ans:0, exp:"Negative power = reciprocal: 6⁻² = 1/6² = 1/36"},
+
+{sec:"F1 – Powers & Standard Form", type:"mcq",
+ q:"423.8 standard form = ?",
+ opts:["4.238 × 10²","42.38 × 10¹","4.238 × 10³","0.4238 × 10³"],
+ ans:0, exp:"Standard form: 4.238 × 10² (mantissa between 1 and 10)"},
+
+{sec:"F1 – Powers & Standard Form", type:"mcq",
+ q:"0.000485 standard form = ?",
+ opts:["4.85 × 10⁻⁴","4.85 × 10⁴","4.85 × 10⁻³","48.5 × 10⁻⁵"],
+ ans:0, exp:"0.000485 = 4.85 × 10⁻⁴ (decimal point moves 4 left)"},
+
+{sec:"F1 – Powers & Standard Form", type:"typed",
+ q:"0.84 × 23000 = ? (standard form)\nKu qor, tusaale: 1.932×10^4",
+ ans:"1.932×10^4",
+ exp:"(8.4×10⁻¹)(2.3×10⁴) = 19.32×10³ = 1.932×10⁴"},
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F1 §6–7  NUMBER SYSTEMS  (Q 41–45)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F1 – Number Systems", type:"mcq",
+ q:"1011.101 (Binary) → Denary = ?",
+ opts:["11.625","13.375","11.5","10.625"],
+ ans:0, exp:"8+0+2+1+0.5+0+0.125 = 11.625"},
+
+{sec:"F1 – Number Systems", type:"mcq",
+ q:"245₁₀ → Binary = ?",
+ opts:["11110101₂","10100000₂","11110001₂","11100101₂"],
+ ans:0, exp:"245 ÷ 2 repeatedly → remainders: 11110101"},
+
+{sec:"F1 – Number Systems", type:"mcq",
+ q:"357.321 (Octal) → Denary ≈ ?",
+ opts:["239.408","179.582","357.321","239.000"],
+ ans:0, exp:"3×64+5×8+7×1+3/8+2/64+1/512 = 239.408"},
+
+{sec:"F1 – Number Systems", type:"mcq",
+ q:"524₁₀ → Octal = ?",
+ opts:["1014₈","365₈","1024₈","524₈"],
+ ans:0, exp:"524 ÷ 8 repeatedly → remainders from bottom: 1014"},
+
+{sec:"F1 – Number Systems", type:"typed",
+ q:"2A7.3E2 (Hex) → Denary ≈ ?\n(Ku qor integer qeybtiisa: 679)",
+ ans:"679",
+ exp:"2×256+10×16+7×1 = 512+160+7 = 679 (integer part)"},
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F2 §1  ALGEBRAIC EXPRESSIONS  (Q 46–53)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F2 – Algebraic Expressions", type:"mcq",
+ q:"Fududee: 4x + 3y − 2z + 5y − 3x + 4z",
+ opts:["x + 8y + 2z","x + 8y − 2z","2x + 8y + 2z","x − 8y + 2z"],
+ ans:0, exp:"4x−3x=x, 3y+5y=8y, −2z+4z=2z → x+8y+2z"},
+
+{sec:"F2 – Algebraic Expressions", type:"mcq",
+ q:"Fududee: 4uv − 7uz − 6wz + 2uv + 3wz",
+ opts:["6uv − 7uz − 3wz","6uv + 7uz − 3wz","2uv − 7uz + 3wz","6uv + 3wz"],
+ ans:0, exp:"4uv+2uv=6uv, −7uz, −6wz+3wz=−3wz"},
+
+{sec:"F2 – Algebraic Expressions", type:"mcq",
+ q:"Koobi (factorize): 9st − 3sv − 6sw",
+ opts:["3s(3t − v − 2w)","3(3st − v − 2w)","s(9t − 3v − 6w)","3s(t − v − w)"],
+ ans:0, exp:"GCF = 3s → 3s(3t−v−2w)"},
+
+{sec:"F2 – Algebraic Expressions", type:"mcq",
+ q:"Ballaar: 3x(y − 2z)",
+ opts:["3xy − 6xz","3xy + 6xz","3xy − 2xz","6xy − 3xz"],
+ ans:0, exp:"3x·y=3xy, 3x·(−2z)=−6xz"},
+
+{sec:"F2 – Algebraic Expressions", type:"mcq",
+ q:"Ballaar: −2(2x − 4z)",
+ opts:["−4x + 8z","−4x − 8z","4x − 8z","4x + 8z"],
+ ans:0, exp:"−2·2x=−4x, −2·(−4z)=+8z"},
+
+{sec:"F2 – Algebraic Expressions", type:"mcq",
+ q:"Ballaar oo fududee: 8(y − z) + 2(7x + z)",
+ opts:["14x + 8y − 6z","14x + 8y + 6z","14x − 8y − 6z","14x + 8y − 2z"],
+ ans:0, exp:"8y−8z+14x+2z = 14x+8y−6z"},
+
+{sec:"F2 – Algebraic Expressions", type:"typed",
+ q:"Ballaar oo fududee: 7(a − [4 − 5(b − 3a)])\nKu qor, tusaale: 35b-98a-28",
+ ans:"35b-98a-28",
+ exp:"5(b−3a)=5b−15a → 7(a−4+5b−15a) = 7(−14a+5b−4) = −98a+35b−28"},
+
+{sec:"F2 – Algebraic Expressions", type:"typed",
+ q:"Fududee: 4xy + 3xz − 6zy − 5zx + xy\nKu qor, tusaale: 5xy-2xz-6zy",
+ ans:"5xy-2xz-6zy",
+ exp:"4xy+xy=5xy, 3xz−5xz=−2xz, −6zy → 5xy−2xz−6zy"},
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F2 §2  POWERS / RULES OF INDICES  (Q 54–58)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F2 – Powers & Rules of Indices", type:"mcq",
+ q:"aᵐ × aⁿ = ?",
+ opts:["aᵐ⁺ⁿ","aᵐⁿ","aᵐ⁻ⁿ","a"],
+ ans:0, exp:"Rule 1: aᵐ × aⁿ = aᵐ⁺ⁿ"},
+
+{sec:"F2 – Powers & Rules of Indices", type:"mcq",
+ q:"(x²)³ = ?",
+ opts:["x⁶","x⁵","x⁸","x²"],
+ ans:0, exp:"Rule 3: (aᵐ)ⁿ = aᵐⁿ → x^(2×3) = x⁶"},
+
+{sec:"F2 – Powers & Rules of Indices", type:"mcq",
+ q:"a⁻ᵐ = ?",
+ opts:["1/aᵐ","−aᵐ","aᵐ","1/(−a)ᵐ"],
+ ans:0, exp:"Rule 6: a⁻ᵐ = 1/aᵐ"},
+
+{sec:"F2 – Powers & Rules of Indices", type:"mcq",
+ q:"Fududee: (6x⁻⁴ × 2x³) ÷ 8x⁻³",
+ opts:["(3/2)x²","3x²","(3/2)x⁻²","12x²"],
+ ans:0, exp:"12x^(−1) ÷ 8x^(−3) = (12/8)x^(−1+3) = 1.5x²"},
+
+{sec:"F2 – Powers & Rules of Indices", type:"typed",
+ q:"8^(1/3) = ?\n(Ku qor lamba)",
+ ans:"2",
+ exp:"Rule 7: a^(m/n) = ⁿ√aᵐ → 8^(1/3) = ∛8 = 2"},
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// F2 §3  LOGARITHMS  (Q 59–60)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+{sec:"F2 – Logarithms", type:"mcq",
+ q:"Haddii a = bᶜ, logarithmka waxaa loo qoraa:",
+ opts:["c = log_b a","b = log_a c","a = log_b c","c = log_a b"],
+ ans:0, exp:"Definition: a = bᶜ ↔ c = log_b a"},
+
+{sec:"F2 – Logarithms", type:"mcq",
+ q:"log₂ 16 = ?",
+ opts:["4","2","8","16"],
+ ans:0, exp:"2⁴ = 16 → log₂ 16 = 4"},
+
+{sec:"F2 – Logarithms", type:"mcq",
+ q:"Sharci: log_a(xy) = ?",
+ opts:["log_a x + log_a y","log_a x − log_a y","log_a x × log_a y","log_a(x+y)"],
+ ans:0, exp:"Product Rule: log_a(xy) = log_a x + log_a y"},
+
+{sec:"F2 – Logarithms", type:"mcq",
+ q:"log_a xⁿ = ?",
+ opts:["n · log_a x","log_a(nx)","(log_a x)ⁿ","n + log_a x"],
+ ans:0, exp:"Power Rule: log_a(xⁿ) = n · log_a x"},
+
+{sec:"F2 – Logarithms", type:"mcq",
+ q:"log_a a = ?",
+ opts:["1","0","a","∞"],
+ ans:0, exp:"log_a a = 1 (since a¹ = a)"},
+
+{sec:"F2 – Logarithms", type:"mcq",
+ q:"log_a 1 = ?",
+ opts:["0","1","a","−1"],
+ ans:0, exp:"a⁰ = 1 → log_a 1 = 0"},
+
+{sec:"F2 – Logarithms", type:"mcq",
+ q:"Change of Base: log_b x = ?",
+ opts:["log x ÷ log b","log b ÷ log x","log(x − b)","log x × log b"],
+ ans:0, exp:"Change of base formula: log_b x = log x / log b"},
+
+{sec:"F2 – Logarithms", type:"typed",
+ q:"Solve for x: 2 log_a x − log_a(x−1) = log_a(x−2)\nKu qor qiimaha x (fraction ahaan: 2/3)",
+ ans:"2/3",
+ exp:"LHS = log_a(x²/(x−1)), so x²/(x−1)=x−2 → x²=x²−3x+2 → 3x=2 → x=2/3"},
+
+{sec:"F2 – Logarithms", type:"mcq",
+ q:"log_b x = ln x ÷ ln b. log₃ 8 ≈ ? (to 3 d.p.)",
+ opts:["1.893","2.079","0.903","3.000"],
+ ans:0, exp:"log₃ 8 = ln8/ln3 = 2.0794/1.0986 ≈ 1.893"},
+
+{sec:"F2 – Logarithms", type:"mcq",
+ q:"Fududee: log_a x² + 3 log_a x − 2 log_a 4x = ?",
+ opts:["log_a(x³/16)","log_a(x⁵)","log_a(5x)","log_a(x³)"],
+ ans:0, exp:"= log_a x² + log_a x³ − log_a 16x² = log_a(x⁵/16x²) = log_a(x³/16)"},
+
+{sec:"F2 – Logarithms", type:"mcq",
+ q:"Haddii log K = log P − log T + 1.3 log V, K = ?",
+ opts:["PV^1.3 / T","P − T + V","P × T × V^1.3","P / (TV^1.3)"],
+ ans:0, exp:"log(P/T) + log(V^1.3) = log(PV^1.3/T) → K = PV^1.3/T"},
+];
+
+// ════════════ STATE ════════════
+const TOTAL = QS.length;
+let cur=0, answers=Array(TOTAL).fill(null), done=Array(TOTAL).fill(false);
+let timerInt, secondsLeft=3000, studentName='';
+
+function startExam(){
+  const n=document.getElementById('inp-name').value.trim();
+  if(!n){const el=document.getElementById('inp-name');el.style.borderBottomColor='#ef4444';el.focus();return;}
+  studentName=n;
+  document.getElementById('tb-name').textContent=n;
+  show('s-exam'); buildDots(); renderQ(); startTimer();
+}
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);}
+function startTimer(){
+  timerInt=setInterval(()=>{
+    secondsLeft--;
+    const m=Math.floor(secondsLeft/60),s=secondsLeft%60;
+    const el=document.getElementById('timer');
+    el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+    if(secondsLeft<=300)el.classList.add('warn');
+    if(secondsLeft<=0){clearInterval(timerInt);submitExam();}
+  },1000);
+}
+function buildDots(){
+  const c=document.getElementById('q-dots');c.innerHTML='';
+  QS.forEach((_,i)=>{const d=document.createElement('div');d.className='qdot'+(i===0?' active':'');
+    d.textContent=i+1;d.onclick=()=>{cur=i;renderQ();};c.appendChild(d);});
+}
+function updateDots(){
+  document.querySelectorAll('.qdot').forEach((d,i)=>{
+    let cls='qdot';
+    if(done[i])cls+=QS[i].type==='typed'?' done-typed':' done-mcq';
+    if(i===cur)cls+=' active';
+    d.className=cls;
+  });
+}
+function renderQ(){
+  const q=QS[cur];const isTyped=q.type==='typed';
+  document.getElementById('sec-badge').textContent=q.sec;
+
+  let body='';
+  if(isTyped){
+    const val=answers[cur]||'';const isDone=done[cur];
+    const userCorrect=isDone&&answers[cur].toLowerCase().trim()===q.ans;
+    body=`<div class="typed-wrap">
+      <input class="typed-input${isDone?(userCorrect?' tc':' tw'):''}"
+        id="typed-inp" type="text" placeholder="Jawaabta halkan ku qor…"
+        value="${val.replace(/"/g,'&quot;')}" ${isDone?'disabled':''}>
+      ${isDone?'':` <button class="btn-check" onclick="checkTyped()">✓ Hubi Jawaabta</button>`}
+      ${isDone?`<div class="expbox"><strong>Jawaabta saxda ah:</strong> ${q.ans}<br><strong>Sharaxaad:</strong> ${q.exp}</div>`:''}
+    </div>`;
+  } else {
+    const chosen=answers[cur];const isDone=done[cur];
+    body='<div class="options">';
+    q.opts.forEach((o,i)=>{
+      let cls='opt',tag='';
+      if(isDone){if(i===q.ans){cls+=' correct';tag='<span class="fb-tag c">✓ Saxan</span>';}
+        else if(i===chosen){cls+=' wrong';tag='<span class="fb-tag w">✗ Khaldan</span>';}}
+      else if(i===chosen)cls+=' selected';
+      body+=`<div class="${cls}" onclick="selectOpt(${i})">
+        <div class="opt-key">${['A','B','C','D'][i]}</div>
+        <div class="opt-text">${o}</div>${tag}</div>`;
+    });
+    body+='</div>';
+    if(isDone)body+=`<div class="expbox"><strong>Sharaxaad:</strong> ${q.exp}</div>`;
+  }
+  const pill=isTyped?'<span class="q-type-pill pill-typed">✎ Ku Qor</span>':'<span class="q-type-pill pill-mcq">⊙ MCQ</span>';
+  document.getElementById('qcard').innerHTML=`
+    <div class="qcard-head">
+      <div class="q-badge">Su'aal ${cur+1}</div>${pill}
+      <div class="q-section-label">${cur+1}/${TOTAL}</div>
+    </div>
+    <div class="qcard-body">
+      <div class="q-text">${q.q.replace(/\n/g,'<br>')}</div>${body}
+    </div>`;
+  if(isTyped&&!done[cur]){const inp=document.getElementById('typed-inp');if(inp)inp.addEventListener('keydown',e=>{if(e.key==='Enter')checkTyped();});}
+  const pct=Math.round((cur+1)/TOTAL*100);
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-txt').textContent=`${cur+1} / ${TOTAL}`;
+  const btn=document.getElementById('btn-next');
+  if(cur===TOTAL-1){btn.textContent='✔ Gudbi';btn.className='btn-nav btn-submit-nav';}
+  else{btn.textContent='Xiga →';btn.className='btn-nav btn-next';}
+  updateDots();
+}
+function selectOpt(i){if(done[cur])return;answers[cur]=i;done[cur]=true;renderQ();}
+function checkTyped(){
+  const inp=document.getElementById('typed-inp');
+  if(!inp||done[cur])return;const val=inp.value.trim();if(!val)return;
+  answers[cur]=val;done[cur]=true;renderQ();
+}
+function goQ(d){cur=Math.max(0,Math.min(TOTAL-1,cur+d));renderQ();}
+function nextOrSubmit(){if(cur===TOTAL-1)submitExam();else goQ(1);}
+
+function submitExam(){
+  clearInterval(timerInt);
+  let correct=0,wrong=0,skip=0;
+  QS.forEach((q,i)=>{
+    if(!done[i]){skip++;return;}
+    const ok=q.type==='mcq'?answers[i]===q.ans:answers[i].toLowerCase().trim()===q.ans;
+    if(ok)correct++;else wrong++;
+  });
+  const pct=Math.round(correct/TOTAL*100);
+  document.getElementById('r-subline').textContent=studentName+' · Prepared by Sacad Siciid';
+  document.getElementById('r-score').textContent=correct;
+  document.getElementById('r-correct').textContent=correct;
+  document.getElementById('r-wrong').textContent=wrong;
+  document.getElementById('r-skip').textContent=skip;
+  document.getElementById('r-pct').textContent=pct+'%';
+  let gc,gl;
+  if(pct>=80){gc='gA';gl='A – Ku Fiican';}
+  else if(pct>=65){gc='gB';gl='B – Wanaagsan';}
+  else if(pct>=50){gc='gC';gl='C – Dhexdhexaad';}
+  else{gc='gF';gl='F – Ku Noqo Wax Barasho';}
+  const ge=document.getElementById('r-grade');ge.textContent=gl;ge.className='sc-grade '+gc;
+  const bdl=document.getElementById('bd-list');
+  bdl.innerHTML=QS.map((q,i)=>{
+    let ok=false;
+    if(done[i])ok=q.type==='mcq'?answers[i]===q.ans:answers[i].toLowerCase().trim()===q.ans;
+    const sAns=q.type==='mcq'?q.opts[q.ans]:q.ans;
+    const uAns=done[i]?(q.type==='mcq'?q.opts[answers[i]]:answers[i]):'(Lama jawabin)';
+    const qtext=q.q.split('\n')[0];
+    return `<div class="bd-item">
+      <div class="bd-num">${i+1}</div>
+      <div class="bd-body">
+        <div class="bd-q">${qtext.length>55?qtext.slice(0,55)+'…':qtext}</div>
+        <div class="bd-a">${ok?'✓ '+sAns:'Saxda ah: '+sAns+' | Adigu: '+uAns}</div>
+      </div>
+      <div class="bd-tag ${ok?'c':'w'}">${ok?'✓':'✗'}</div>
+    </div>`;
+  }).join('');
+  show('s-result');
+}
+function resetExam(){
+  cur=0;answers=Array(TOTAL).fill(null);done=Array(TOTAL).fill(false);secondsLeft=3000;
+  document.getElementById('inp-name').value='';
+  document.getElementById('inp-name').style.borderBottomColor='';
+  document.getElementById('timer').classList.remove('warn');
+  show('s-welcome');
+}
+</script>
+</body>
+</html>
